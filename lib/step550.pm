@@ -185,7 +185,7 @@ sub executeGoal
         exit;
     }
 
-    logInfo("$stepName[2] - Creating binery in \[$stepHash{'NAME'}.bin\] ...");
+    logInfo("$stepName[2] - Creating binary in \[$stepHash{'NAME'}.bin\] ...");
     $command = "$toolchainPath/arm-none-eabi-objcopy -Obinary $cwd/out/$stepHash{'NAME'}.elf $cwd/out/$stepHash{'NAME'}.bin";
 
     {
