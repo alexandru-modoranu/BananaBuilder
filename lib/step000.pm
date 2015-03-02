@@ -185,8 +185,9 @@ sub buildFileIndex
 
     foreach my $item (keys %sourceFiles)
     {
-        if ($#{$sourceFiles{$item}})
-        {
+
+        if ($#{$sourceFiles{$item}} > 1)
+        {            
             logResult('NOK');
 
             # build error message
@@ -200,6 +201,45 @@ sub buildFileIndex
             $errorMsg = $errorMsg . "\n[Solution]:\n1. Filter the folders containing duplicates with DIR_FILTER.\n2. Rename the duplicate files.\n\n";
             logInfo($errorMsg);
             logError("Duplicate files found!\n");
+        }
+        elsif ($#{$sourceFiles{$item}} == 1)
+        {
+            my $skip = 0;
+
+            foreach my $itemInItem (@{$sourceFiles{$item}})
+            {
+                my ($shortFilePath) = $itemInItem =~ /$cwd([\/|\\].*)/;
+
+                foreach my $dirPath (@foldersToCheck)
+                {
+                    if ($shortFilePath =~ /$dirPath/)
+                    {
+                        $skip = 1;
+                        last;
+                    }
+                }
+            }
+
+            if ($skip == 0)
+            {
+                logResult('NOK');
+
+                # build error message
+                my $errorMsg = "Duplicate file <$item>\n    File locations:\n";
+
+                foreach my $itemInItem (@{$sourceFiles{$item}})
+                {
+                    $errorMsg = $errorMsg . "    $itemInItem\n";
+                }
+
+                $errorMsg = $errorMsg . "\n[Solution]:\n1. Filter the folders containing duplicates with DIR_FILTER.\n2. Rename the duplicate files.\n\n";
+                logInfo($errorMsg);
+                logError("Duplicate files found!\n");
+            }
+        }
+        else
+        {
+            # Do nothing
         }
     }
 
