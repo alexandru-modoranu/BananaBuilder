@@ -160,5 +160,8 @@ sub parsePd
 
         load $item;
         $item->executeGoal(\%tmpHash);
+
+        last if ($builderGoal eq 'clean');
     }
+    
 }
