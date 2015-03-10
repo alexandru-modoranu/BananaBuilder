@@ -116,6 +116,7 @@ sub parsePd
         }
     }
 
+    # Extract some data from step000
     if (exists $pdHash{'step000'})
     {
         if (exists $pdHash{'step000'}{'LOCAL'} and exists $pdHash{'step000'}{'PLATFORM'})
@@ -142,6 +143,7 @@ sub parsePd
         die "ERROR: No project information defined!\n";
     }
 
+    # Run the goal execution of every step in the PD file
     foreach my $item (sort keys %pdHash)
     {
         my %tmpHash;
@@ -163,5 +165,70 @@ sub parsePd
 
         last if ($builderGoal eq 'clean');
     }
-    
+
+    # Create build reports
+    createSummaryReport();
+
+}
+
+sub createSummaryReport
+{
+    my $tmpFolder = "$cwd/tmp";
+    my @infoFiles = my @files = File::Find::Rule->file
+                                                ->name('*.ok') # search by file extensions
+                                                ->in($tmpFolder);
+    my @warningFiles = my @files = File::Find::Rule->file
+                                                   ->name('*.warn') # search by file extensions
+                                                   ->in($tmpFolder);
+    my @errorFiles = my @files = File::Find::Rule->file
+                                                 ->name('*.error') # search by file extensions
+                                                 ->in($tmpFolder);
+
+    if (exists $pdHash{'step000'}{'VERBOSITY'} and $pdHash{'step000'}{'VERBOSITY'} < 10 )
+    {
+        print "______________________ End of Report _______________________\n";
+        my $noErrorFiles = $#errorFiles + 1;
+        my $noWarningFiles = $#warningFiles + 1;
+        my $noInfoFiles = $#infoFiles + 1;
+        print "***Log files status : errors in $noErrorFiles file(s), warnings in $noWarningFiles file(s), informations in $noInfoFiles file(s)\n";
+        print "***Log files are available in the [root/tmp] directory\n";
+    }
+    else
+    {
+        print "______________________ Summary Report ______________________\n";
+        foreach my $errorFile (sort @errorFiles)
+        {
+            my $fileData;
+            my ($errorFilename) = $errorFile =~ /.+[\/|\\](.+)/g;
+
+            print "__________ $errorFilename ___________\n";
+            {
+                local(*INFILE, $/);
+                open(INFILE, "<", "$tmpFolder/$errorFilename") or die "Cannot open $errorFilename: $!";
+                print <INFILE>;
+            }
+        }
+
+        foreach my $warningFile (sort @warningFiles)
+        {
+            my $fileData;
+
+            my ($warningFilename) = $warningFile =~ /.+[\/|\\](.+)/g;
+
+            print "__________ $warningFilename ___________\n";
+            {
+                local(*INFILE, $/);
+                open(INFILE, "<", "$tmpFolder/$warningFilename") or die "Cannot open $warningFilename: $!";
+                print <INFILE>;
+            }
+        }
+
+        print "______________________ End of Report _______________________\n";
+        my $noErrorFiles = $#errorFiles + 1;
+        my $noWarningFiles = $#warningFiles + 1;
+        my $noInfoFiles = $#infoFiles + 1;
+        print "***Log files status : errors in $noErrorFiles file(s), warnings in $noWarningFiles file(s), informations in $noInfoFiles file(s)\n";
+        print "***Log files are available in the [root/tmp] directory\n";
+    }
+
 }
